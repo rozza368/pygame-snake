@@ -9,12 +9,12 @@ class Game:
         self.sw, self.sh = (640, 480)
         self.display = pygame.display.set_mode((self.sw, self.sh))
         self.clock = pygame.time.Clock()
-        self.fps = 5
+        self.fps = 8
         self.grid_size = 20  # pixels
 
-        self.max_w, self.max_h = (self.sw // self.grid_size, self.sh // self.grid_size)
+        self.points = 0
 
-        self.apple_pos = (0, 0)
+        self.max_w, self.max_h = (self.sw // self.grid_size, self.sh // self.grid_size)
 
         self.colors = {
             "BLACK": (0, 0, 0),
@@ -24,7 +24,7 @@ class Game:
         }
 
         self.snake = [
-            [0, 0]
+            [self.max_w // 2, self.max_h // 2]
         ]
 
         self.create_apple()
@@ -35,7 +35,12 @@ class Game:
 
 
     def create_apple(self):
-        self.apple_pos = (random.randint(0, self.max_w), random.randint(0, self.max_h))
+        while True:
+            self.apple_pos = [random.randint(0, self.max_w), random.randint(0, self.max_h)]
+            if not self.apple_pos in self.snake:
+                print("apple created")
+                break
+            print("apple", self.apple_pos)
 
 
     def main(self):
@@ -59,6 +64,8 @@ class Game:
                         self.direction = "r"
                     print(self.direction)
 
+            self.display.fill(self.colors["BLACK"])
+
             if self.direction == "l":
                 self.snake[0][0] -= 1
             elif self.direction == "r":
@@ -68,7 +75,9 @@ class Game:
             elif self.direction == "d":
                 self.snake[0][1] += 1
 
-            self.display.fill(self.colors["BLACK"])
+            if self.snake[0] == self.apple_pos:
+                self.points += 1
+                self.create_apple()
 
             # draw vertical lines
             for i in range(0, self.sw, self.grid_size):
@@ -78,11 +87,11 @@ class Game:
             for i in range(0, self.sh, self.grid_size):
                 pygame.draw.line(self.display, self.colors["WHITE"], (0, i), (self.sw, i), 3)
 
-            pygame.draw.rect(self.display, self.colors["RED"], (self.adjust_coords(self.head_pos), (self.grid_size, self.grid_size)))
+            pygame.draw.rect(self.display, self.colors["RED"], (self.adjust_coords(self.snake[0]), (self.grid_size, self.grid_size)))
 
             pygame.draw.rect(self.display, self.colors["GREEN"], (self.adjust_coords(self.apple_pos), (self.grid_size, self.grid_size)))
 
-            print(self.head_pos)
+            print(self.snake[0], self.apple_pos)
             pygame.display.flip()
             self.clock.tick(self.fps)
 
