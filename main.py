@@ -44,14 +44,16 @@ class Game:
                 break
     
 
-    def game_over(self):
+    def game_over(self, reason=""):
         # placeholder
+        print(f"Game over! {reason}")
         pygame.quit()
         exit()
 
 
     def main(self):
         keep_last = False
+        draw_grid = False
         self.direction = "r"
 
         while True:
@@ -60,8 +62,6 @@ class Game:
                     pygame.quit()
                     exit()
                 if event.type == KEYDOWN:
-                    print("key pressed")
-
                     if event.key == K_UP and not self.direction == "d":
                         self.direction = "u"
                     elif event.key == K_DOWN and not self.direction == "u":
@@ -70,7 +70,6 @@ class Game:
                         self.direction = "l"
                     elif event.key == K_RIGHT and not self.direction == "l":
                         self.direction = "r"
-                    print(self.direction)
 
             self.display.fill(self.colors["BLACK"])
 
@@ -91,21 +90,35 @@ class Game:
                 del self.snake[-1]
             keep_last = False
 
+            snake_head = self.snake[0]
             # apple collision
-            if self.snake[0] == self.apple_pos:
+            if snake_head == self.apple_pos:
                 self.points += 1
                 self.create_apple()
                 keep_last = True
+            
+
+            # self collision
+            if snake_head in self.snake[2:]:
+                print(self.snake[0], self.snake[1:])
+                self.game_over("Collided with self.")
+            
+
+            # edge collision
+
+            if snake_head[0] < 0 or snake_head[1] < 0 or snake_head[0] > self.max_w or snake_head[1] > self.max_h:
+                self.game_over("Went out of bounds.")
+
 
             ### START DRAWING
+            if draw_grid:
+                # draw vertical lines
+                for i in range(0, self.sw, self.grid_size):
+                    pygame.draw.line(self.display, self.colors["WHITE"], (i, 0), (i, self.sh), 2)
 
-            # draw vertical lines
-            for i in range(0, self.sw, self.grid_size):
-                pygame.draw.line(self.display, self.colors["WHITE"], (i, 0), (i, self.sh), 2)
-
-            # draw horizontal lines
-            for i in range(0, self.sh, self.grid_size):
-                pygame.draw.line(self.display, self.colors["WHITE"], (0, i), (self.sw, i), 2)
+                # draw horizontal lines
+                for i in range(0, self.sh, self.grid_size):
+                    pygame.draw.line(self.display, self.colors["WHITE"], (0, i), (self.sw, i), 2)
 
             # draw snake
             for segment in self.snake:
@@ -119,6 +132,7 @@ class Game:
             # print(self.snake[0], self.apple_pos)
             pygame.display.flip()
             self.clock.tick(self.fps)
+
 
 
 Game().main()
