@@ -5,11 +5,15 @@ import random
 import copy
 
 
+pygame.init()
+pygame.font.init()
 class Game:
     def __init__(self):
         self.sw, self.sh = (640, 480)
         self.display = pygame.display.set_mode((self.sw, self.sh))
+        pygame.display.set_caption("Snake!")
         self.clock = pygame.time.Clock()
+        self.font = pygame.font.SysFont("Comic Sans MS", 36, bold=True)
         self.fps = 8
         self.grid_size = 20  # pixels
 
@@ -46,14 +50,19 @@ class Game:
 
     def game_over(self, reason=""):
         # placeholder
+        self.running = False
         print(f"Game over! {reason}")
-        pygame.quit()
-        exit()
+
+
+
+        # pygame.quit()
+        # exit()
 
 
     def main(self):
         keep_last = False
         draw_grid = False
+        self.running = True
         self.direction = "r"
 
         while True:
@@ -71,65 +80,78 @@ class Game:
                     elif event.key == K_RIGHT and not self.direction == "l":
                         self.direction = "r"
 
-            self.display.fill(self.colors["BLACK"])
+            if self.running:
+                self.display.fill(self.colors["BLACK"])
 
-            # which direction the snake should go, change the head
-            new_head = copy.deepcopy(self.snake)[0]
-            
-            if self.direction == "l":
-                new_head[0] -= 1
-            elif self.direction == "r":
-                new_head[0] += 1
-            elif self.direction == "u":
-                new_head[1] -= 1
-            elif self.direction == "d":
-                new_head[1] += 1
-            
-            self.snake.insert(0, new_head)
-            if not keep_last:
-                del self.snake[-1]
-            keep_last = False
-
-            snake_head = self.snake[0]
-            # apple collision
-            if snake_head == self.apple_pos:
-                self.points += 1
-                self.create_apple()
-                keep_last = True
-            
-
-            # self collision
-            if snake_head in self.snake[2:]:
-                print(self.snake[0], self.snake[1:])
-                self.game_over("Collided with self.")
-            
-
-            # edge collision
-
-            if snake_head[0] < 0 or snake_head[1] < 0 or snake_head[0] > self.max_w or snake_head[1] > self.max_h:
-                self.game_over("Went out of bounds.")
+                # which direction the snake should go, change the head
+                new_head = copy.deepcopy(self.snake)[0]
+                
+                if self.direction == "l":
+                    new_head[0] -= 1
+                elif self.direction == "r":
+                    new_head[0] += 1
+                elif self.direction == "u":
+                    new_head[1] -= 1
+                elif self.direction == "d":
+                    new_head[1] += 1
+                
+                self.snake.insert(0, new_head)
+                if not keep_last:
+                    del self.snake[-1]
+                keep_last = False
 
 
-            ### START DRAWING
-            if draw_grid:
-                # draw vertical lines
-                for i in range(0, self.sw, self.grid_size):
-                    pygame.draw.line(self.display, self.colors["WHITE"], (i, 0), (i, self.sh), 2)
+                snake_head = self.snake[0]
 
-                # draw horizontal lines
-                for i in range(0, self.sh, self.grid_size):
-                    pygame.draw.line(self.display, self.colors["WHITE"], (0, i), (self.sw, i), 2)
+                # apple collision
+                if snake_head == self.apple_pos:
+                    self.points += 1
+                    self.create_apple()
+                    keep_last = True
+                
 
-            # draw snake
-            for segment in self.snake:
-                pygame.draw.rect(self.display, self.colors["RED"], (self.adjust_coords(segment), (self.grid_size, self.grid_size)))
+                # self collision
+                if snake_head in self.snake[2:]:
+                    print(self.snake[0], self.snake[1:])
+                    self.game_over("Collided with self.")
+                    continue
+                
 
-            # draw apple
-            pygame.draw.rect(self.display, self.colors["GREEN"], (self.adjust_coords(self.apple_pos), (self.grid_size, self.grid_size)))
+                # edge collision
 
-            ### END DRAWING
+                if snake_head[0] < 0 or snake_head[1] < 0 or snake_head[0] > self.max_w or snake_head[1] > self.max_h:
+                    self.game_over("Went out of bounds.")
+                    continue
 
-            # print(self.snake[0], self.apple_pos)
+
+                ### START DRAWING
+                if draw_grid:
+                    # draw vertical lines
+                    for i in range(0, self.sw, self.grid_size):
+                        pygame.draw.line(self.display, self.colors["WHITE"], (i, 0), (i, self.sh), 2)
+
+                    # draw horizontal lines
+                    for i in range(0, self.sh, self.grid_size):
+                        pygame.draw.line(self.display, self.colors["WHITE"], (0, i), (self.sw, i), 2)
+
+                # draw snake
+                for segment in self.snake:
+                    pygame.draw.rect(self.display, self.colors["RED"], (self.adjust_coords(segment), (self.grid_size, self.grid_size)))
+
+                # draw apple
+                pygame.draw.rect(self.display, self.colors["GREEN"], (self.adjust_coords(self.apple_pos), (self.grid_size, self.grid_size)))
+
+                ### END DRAWING
+
+            else:
+                self.display.fill(self.colors["BLACK"])
+
+                game_over = self.font.render("Game over!", True, self.colors["WHITE"])
+                score_text = self.font.render(f"Score: {self.points}", True, self.colors["WHITE"])
+
+                self.display.blit(game_over, game_over.get_rect(center=(self.sw // 2, self.sh // 3)))
+                self.display.blit(score_text, score_text.get_rect(center=(self.sw // 2, self.sh // 1.5)))
+
             pygame.display.flip()
             self.clock.tick(self.fps)
 
